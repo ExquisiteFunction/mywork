@@ -1,0 +1,49 @@
+\section{动态求值和定义相等}
+
+EF中求值断言的归纳定义由下面的规则给出：
+\begin{subequations}
+    \begin{gather}
+        \dfrac{}
+            {\mathsf{lam}\{\tau\}(x.e) \Downarrow \mathsf{lam}\{\tau\}(x.e)} \\
+        \dfrac{ e_1 \Downarrow \mathsf{lam}\{\tau\}(x.e) \quad [e_2/x]e \Downarrow v}
+            {\mathsf{ap}(e_1;e_2)\Downarrow v}
+    \end{gather}
+\end{subequations}
+显然地，如果$e \Downarrow v$，那么$v\ \mathsf{val}$，
+并且如果$e\ \mathsf{val}$,那么$e \Downarrow e$。
+
+\begin{theorem}{}
+$e \Downarrow v\ \ iff.\ \ e \Arrow^* v 并且v\ \mathsf{val}$。
+\end{theorem}
+
+\begin{proof}
+充分性的证明按照规则(8.6)进行归纳，使用类似Theorem(7.2)的证明方法。
+
+必要性的证明按照规则(5.1)进行归纳，证明依赖于Lemma(7.4)的一个类比，
+该引理指出求值在逆向执行下是封闭的，这是通过对规则(8.5)的归纳得到的。
+\end{proof}
+
+EF的动态按名调用的定义相等是由下面的规则的定义的。
+
+\begin{subequations}
+    \begin{gather}
+        \dfrac{}
+            {\Gamma \vdash \mathsf{ap} ( \mathsf{lam} \{\tau\}(x.e_2);e_1) \equiv [e_1/x]e_2:\tau_2 } \\
+        \dfrac{\Gamma \vdash e_1 \equiv e'_1:\tau_2 \Arrow \tau 
+                \quad \Gamma \vdash e_2 \equiv e'_2:\tau_2}
+            {\Gamma \vdash \mathsf{ap}(e_1;e_2) \equiv \mathsf{ap}(e'_1;e'_2):\tau} \\
+        \dfrac{ \Gamma,x:\tau_1 \vdash e_2 \equiv e'_2:\tau_2 }
+            {\Gamma \vdash \mathsf{lam}\{\tau_1\}(x.e_2) 
+                \equiv \mathsf{lam}\{tau_1\}(x.e'_2):\tau_1 \Arrow \tau_2 }
+    \end{gather}
+\end{subequations}
+
+按值调用的定义相等需要更多的机制。
+主要的思想是通过限制规则(8.7a)使得参数必须是值。
+此外，必须扩展值使其包含变量，因为在按值调用中，函数用参数变量代表参数的值。
+按值调用的定义相等断言采用下面的形式：
+$$\Gamma \vdash e_1 \equiv e_2 : \tau,$$
+其中$\Gamma$由成对的假设$x:\tau$组成，
+例如$x\ \mathsf{val}$声明了对范围内的每一个变量$x$，其类型是值。
+$\Gamma \vdash e\ \mathsf{val}$表示在这些假设下$e$是值，
+所以有$x:\tau$，$x\ \mathsf{val} \vdash x\ \mathsf{val}$

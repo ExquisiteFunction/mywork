@@ -1,0 +1,58 @@
+\section{一阶函数}
+\textbf{ED}语言从\textbf{E}语言按照如下的语法扩展了函数的定义和函数的应用：
+$$
+\begin{array}{llll}
+\mathsf{Exp}\quad e \quad ::= \quad &\mathsf{apply}\{f\}(e)    &f(e)    &\text{应用}\\
+                                    &\mathsf{fun}\{\tau_1;\tau_2\}(x_1.e_2;f.e)    &\mathsf{fun} f(x_1:\tau_1):\tau_2 = e_2  \mathsf{\ in\ }  e    &\text{定义}
+\end{array}
+$$
+表达式$\mathsf{fun} \{\tau_1;\tau_2\}({x_1}.{e_2};f.e)$将函数名$f$和$e$绑定到模式$x_1.e_2$,其中$x_1$是参数，$e_2$是定义。
+函数的域和范围分别是$\tau_1$类型和$\tau_2$类型。
+表达式$\mathsf{apply} \{f\}(e)$实例化了$f$和$e$的绑定。
+\textbf{ED}的静态语义定义了两种断言形式：
+\begin{definition}
+表达式类型，$e:t$，声明了$e$有$t$类型
+\end{definition}
+\begin{definition}
+函数类型$f(\tau_1):\tau_2$，声明了$f$是一个参数类型为$\tau_1$并且返回值类型为$\tau_2$的函数。
+\end{definition}
+
+断言$f(\tau_1):\tau_2$被称为$f$的\textit{函数头}，它指明了一个函数的域类型和范围类型。
+
+\textbf{ED}的静态语义由下面的规则定义：
+\begin{subequations}
+    \begin{gather}
+        \dfrac{\Gamma,x_1:\tau_1\vdash e_2:\tau_2  \quad  \Gamma,f(\tau_1):\tau_2\vdash e:\tau}
+            {\Gamma \vdash \mathsf{fun}\{\tau_1;\tau_2\}(x_1.e_2;f.e):\tau} \\
+        \dfrac{\Gamma \vdash f(\tau_1):\tau_2  \quad  \Gamma\vdash e:\tau_1}
+            {\Gamma \vdash \mathsf{apply}\{f\}(e):\tau_2}
+    \end{gather}
+\end{subequations}
+
+\textit{函数替换}，写作$[[x.e / f]]e'$，由对e'的结构进行归纳定义，和普通的替换一样。
+但是，一个函数名$f$并不代表一个表达式，除了在应用形式$\mathsf{apply}\{f\}(e)$中。
+函数替换由下面的规则定义：
+\begin{equation}
+    \dfrac{}
+        {[[x.e/ f ]]\mathsf{apply}\{f\}(e') = \mathsf{let}([[x.e/f]]e';x.e)}
+\end{equation}
+在$f$和参数$e'$的应用处，函数替代产生一个let表达式，将$x$绑定到$f$和$e'$的任何其他应用的扩展结果上。
+    
+\begin{lemma}
+ 如果 $\Gamma,f(\tau_1):t_2 \vdash e:\tau \ and\ \Gamma,x_1:\tau_1 \vdash e_2:_t2$，
+ 那么 $\Gamma \vdash [[x_1.e_2/f]]e:\tau$。
+\end{lemma}
+    
+\begin{proof}
+通过对第一个前提的规则归纳，类似于引理4.4的证明。
+\end{proof}
+
+ED的动态语义则通过函数替换来定义：
+\begin{equation}
+    \dfrac{}
+        {\mathsf{fun}\{\tau_1;\tau_2\}(x_1.e_2;f.e) \Arrow [[x_1.e_2/f]]e}
+\end{equation}
+由于函数替换通过let表达式替代了$f$的所有应用，因此就没必要给出应用表达式的规则了
+（本质上，他们的行为就像求值过程中的被替换的变量，而不是语言中的原始操作。）
+
+通过一些努力，可以将\textbf{ED}的安全性从高阶函数的安全性理论中推导出来，这正是我们的接下来要讨论的。

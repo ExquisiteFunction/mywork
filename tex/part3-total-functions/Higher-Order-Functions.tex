@@ -1,0 +1,120 @@
+\section{高阶函数}
+\textbf{ED}中的函数定义和变量定义之间的相似性令人惊奇。有没有可能结合着两者呢？
+为此必须要跨越的障碍是将函数从表达式中分离出来。
+函数名$f$绑定到一个抽象子 $x.e$，这个抽象子指明了当函数被应用时的实例化模式。
+为了将函数定义简化为通常的定义，我们将抽象子转化为一种表达式，称为 \textit{$\lambda$-抽象}，写作$\mathsf{lam}\{\tau\}(x.e)$.
+函数的应用写作 $\mathsf{ap}(e_1;e_2)$,其中$e_{1}$是表示函数的表达式，而不仅是函数名。
+$\lambda$-抽象 和 应用 是\textit{函数类型} $\mathsf{arr}(\tau_1;\tau_2))$ 的引入和消去形式，
+其中函数类型定义了函数的域 $\tau_{1}$ 和 范围 $\tau_{2}$。
+
+\textbf{EF}语言在\textbf{E}语言上拓展了函数类型，其由下面的语法规则定义：
+$$
+\begin{array}{llll}
+\mathsf{Typ}\quad \tau \quad ::= \quad 
+    & \mathsf{arr}(\tau_1;\tau_2)    & \tau_1 \Arrow \tau_2    & \text{函数}\\
+\mathsf{Exp}\quad e \quad ::= \quad 
+    & \mathsf{lam}\{\tau\}(x.e)    & \lambda(x:\tau):e    & \text{抽象}\\
+    & \mathsf{ap}(e_1;e_2)    & e_1(e_2)    & \text{应用}
+\end{array}
+$$
+
+在EF中，函数和其他类型一样可以作为表达式，因此函数是一等公民的。
+尤其是函数可以作为参数传给其他函数，也可以作为结果返回。
+正因如此，一等公民的函数常被称为是高阶的而不是一阶的。
+
+在规则(4.1)定义的EF静态语义中加入下面两条规则：
+
+\begin{subequations}
+    \begin{gather}
+        \dfrac{\Gamma,x:\tau_1\vdash e:\tau_2}
+            {\Gamma \vdash \mathsf{lam}\{\tau_1\}(x.e): \mathsf{arr}(\tau_1;\tau_2)} \\
+        \dfrac{\Gamma \vdash e1:\mathsf{arr}(\tau_2;\tau)  \quad  \Gamma \vdash e_2:\tau_2}
+            {\Gamma \vdash \mathsf{ap}(e_1;e_2):\tau}
+    \end{gather}
+\end{subequations}
+
+\begin{lemma}(倒推) 假设$ \Gamma\vdash e:\tau$。
+ 1. 如果$e\ =\ \mathsf{lam} {\tau_1}(x.e_2)$，那么$\Gamma,x:\tau_1 \vdash e_2:\tau_2$。
+ 2. 如果$e\ =\ \mathsf{ap} (e_1;e_2)$，那么存在$\tau_2$满足$\Gamma \vdash e_1:\mathsf{arr}(\tau_2;\tau)$和$\Gamma \vdash e_2:\tau_2$。
+\end{lemma}
+
+\begin{proof}
+证明过程用到已有规则的归纳。主要到对于每条规则，只有一种情况使用，并且规则会给出所需的结果。
+\end{proof}
+
+\begin{lemma}(代换)
+ 如果$\Gamma,x:\tau \vdash e':\tau'$，并且$\Gamma \vdash e:\tau$,
+ 那么$\Gamma \vdash [e/x]e':\tau'$。
+\end{lemma}
+
+\begin{proof}
+通过对第一判断的推导进行规则归纳。
+\end{proof}
+
+EF的动态语义在E中加入下面的规则：
+
+\begin{subequations}
+    \begin{gather}
+        \dfrac{}
+            {\mathsf{lam}\{\tau\}(x.e)\mathsf{val}} \\
+        \dfrac{e_1 \Arrow e'_1}
+            {\mathsf{ap}(e_1;e_2) \Arrow \mathsf{ap}(e'_1;e_2)} \\
+        \dfrac{ e_1\ \mathsf{val} \quad e_2 \Arrow e'_2 }
+            {\mathsf{ap}(e_1;e_2) \Arrow \mathsf{ap}( e_1;e'_2 )} \\
+        \dfrac{ e_2\ \mathsf{val} }
+            {\Gamma \vdash \mathsf{ap}(e_1;e_2):\tau}
+    \end{gather}
+\end{subequations}
+
+当函数是一等的，就没有必要进行函数声明了：简单地将函数声明
+$\mathsf{fun}\ f(x_1:\tau_1):\tau_2\ =\ e_2$
+替换为定义
+$\mathsf{lam}\ \lambda(x:\tau_1)e_2\ \mathsf{be}\ f\ \mathsf{in}\ e$,
+并且将二等函数应用$f(e)$替换为一等函数应用$f(e)$。
+因为$\lambda$-抽象是值，因此就没有必要区分按值还是按名替换了。
+但是使用普通的函数定义我们或许能给特定的函数应用起个名字，例如：
+
+\[
+\begin{aligned}
+&\mathsf{let}\ k\ \mathsf{be}\ \lambda(x_1:num)\lambda(x_2:num)x_1      \\ 
+&\mathsf{in\ let}\ kz\ \mathsf{be}\ k(0)\ \mathsf{in}\ kz(3)+kz(5).
+\end{aligned}
+\]
+
+没有一等函数，我们甚至不能构造一个函数$k$，该函数应用到它的第一个参数上，
+并返回一个函数作为结果。
+
+\begin{theorem}{(保持)}
+如果$e:\tau$并且$e \Arrow e'$，那么$e':\tau$。
+\end{theorem}
+
+\begin{proof}
+通过规则8.5来证明，该规则定义了语言的动态语义。考虑规则(8.5d)
+$$\dfrac{}
+{\mathsf{ap} ( \mathsf{lam} \{ \tau_2 \} (x.e_1);e_2) \Arrow [e_2/x]e_1}$$
+假设$\mathsf{ap}(\mathsf{lam}\{\tau_2\}(x.e_1);e_2):\tau_1$。
+由Lamma 8.2我们有$e_2:\tau_2$ 以及 $x : \tau_2 \vdash e_1 : \tau_1$,
+所以由Lemma8.3得到$[e_2/x]e_1:\tau_1$。
+\end{proof}
+
+\begin{lemma}(规范形式)
+ 如果$e:{arr}(\tau_1;\tau_2) $，并且$e\ \mathsf{val}$，
+ 那么$e=\lambda(x:\tau_1)e_2$对某些变量$x$和表达式$e$成立，并且$x:\tau_1 \vdash e_2:\tau_2$。
+\end{lemma}
+
+\begin{proof}
+通过对之前的规则进行归纳，并且假设$e\ \mathsf{val}$。
+\end{proof}
+
+\begin{theorem}{演进}
+如果$e:\tau$，那么要么$e\ \mathsf{val}$，要么存在$e'$满足$e \Arrow e'$。
+\end{theorem}
+
+\begin{proof}
+通过对规则8.4归纳来证明。注意到因为我们只考虑闭项，所以没有关于输入推导的假设。
+\end{proof}
+
+考虑规则(8.4b)。归纳$e_1:\mathsf{val}$或是$e_1 \Arrow e'_1$之一。
+对后一种情况我们有$ \mathsf{ap}(e_1;e_2) \Arrow \mathsf{ap}(e'_1;e_2)$。
+对前一种情况，由Lamma 8.5有$e_1=\mathsf{\tau_2}(x.e)$ 对某些$x$和$e$成立。
+由此得到$ \mathsf{ap}(e_1;e_2) \Arrow [e_2/x]e$。
